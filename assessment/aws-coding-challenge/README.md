@@ -19,6 +19,8 @@ Once done, save the code under the `aws-coding-challenge` folder. Feel free to a
 
 # Update
 
+Note, haven't worked with K8 before, having a look over the weekend at updating the script to deploy the service using EKS.
+
 ## Provisioning the service
 
 ### Prerequisites
@@ -32,12 +34,18 @@ Once done, save the code under the `aws-coding-challenge` folder. Feel free to a
 
 Travel to `./terraform` or use `terraform -chdir=./terraform ...`
 
+
 ```bash
-# Note you can optionally pass variables for: env, app and ami.
+# Ensure you are signed into AWS cli, then
+
+# Note you can optionally pass variables for: env, app and ami. By default
+# env = dev
+# ami = ubuntu-22.04's id
+# app = canstar
 
 terraform init
 terraform plan
-terraform apply -var="public_key=your_ssh_public_key"
+terraform apply
 ```
 
 ### Outputs
@@ -50,11 +58,11 @@ This will create a file in the ./terraform called public_ip.txt. This file will 
 
 ```bash
 # Python 3
-python3 ./healthcheck_script.py
+python3 ./healthcheck.py
 
 # Pipenv
 pipenv install
-pipenv run python ./healthcheck_script.py
+pipenv run python ./healthcheck.py
 ```
 
 You should get a response like:
@@ -73,7 +81,7 @@ Can be setup using a cron job or a scheduled task. E.G.,
 ```bash
 crontab -e
 # Add the following line to check every minute
-* * * * * /usr/bin/python3 /path/to/healthcheck_script.py
+* * * * * /usr/bin/python3 /path/to/healthcheck.py
 ```
 
 ## Notes

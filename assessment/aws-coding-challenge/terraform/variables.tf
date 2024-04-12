@@ -15,7 +15,7 @@ variable env {
 
 variable app {
   type      = string
-  default   = "current-time"
+  default   = "canstar"
 }
 
 variable account_id {
