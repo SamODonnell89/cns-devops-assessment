@@ -1,3 +1,5 @@
+# Note, only deploys an EC2 instance that returns the current time
+# Need to look into how to deploy a Kube cluster. Keep
 
 resource "aws_instance" "web_server" {
   ami                         = var.ami
