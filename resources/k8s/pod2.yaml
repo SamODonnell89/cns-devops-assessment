@@ -1,0 +1,16 @@
+apiVersion: v1
+kind of: Pod
+metadata:
+  name: current-time-pod
+spec:
+  containers:
+  - name: current-time-container
+    image: nginx
+    command: ["/bin/bash", "-c", "/user_data/current_time.sh"]
+    volumeMounts:
+    - name: user-data
+      mountPath: /user_data
+  volumes:
+  - name: user-data
+    configMap:
+      name: current-time-config

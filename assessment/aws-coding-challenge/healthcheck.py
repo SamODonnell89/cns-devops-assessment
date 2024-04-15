@@ -1,36 +1,43 @@
 import requests
-from datetime import datetime
-import pytz
+import datetime
+import time
+import boto3
 
-def healthcheck(url):
+def get_service_url():
+    # Retrieve the service URL using the AWS SDK
+    eks_client = boto3.client('eks')
+    cluster_name = 'canstar-eks-cluster'
+
+    cluster_info = eks_client.describe_cluster(name=cluster_name)
+    endpoint = cluster_info['cluster']['endpoint']
+
+    # Todo: Replace hard-coded values to improve maintainability
+    k8s_client = boto3.client('eks', endpoint_url=f'https://{endpoint}')
+    service_name = 'current-time-service'
+    namespace = 'default'
+
+    service_info = k8s_client.describe_service(name=service_name, namespace=namespace)
+    service_url = service_info['status']['loadBalancer']['ingress'][0]['hostname']
+
+    return f'http://{service_url}'
+
+def check_service_health():
+    service_url = get_service_url()
     try:
-        public_ip = open("./terraform/public_ip.txt", "r").read().strip()
-        response = requests.get(url)
-
+        response = requests.get(service_url)
         if response.status_code == 200:
-            server_time_str = response.text.strip()
-            server_time = datetime.strptime(server_time_str, "%Y-%m-%d %H:%M:%S")
-            server_time = pytz.utc.localize(server_time)
-            current_time = datetime.now(pytz.utc)
-            print("Current Time (UTC): ", current_time)
-            print("Server Time (UTC):", server_time)
-
-            time_diff = abs((current_time - server_time).total_seconds())
+            service_time = datetime.datetime.strptime(response.text.strip(), '%Y-%m-%d %H:%M:%S')
+            current_time = datetime.datetime.now()
+            time_diff = abs((current_time - service_time).total_seconds())
             if time_diff <= 1:
-                print("Service is up and clock is synchronized.")
-                return True
+                print("Service is healthy")
             else:
-                print("Service is up but clock is desynchronized by more than 1 second.")
-                return False
+                print("Service clock is desynchronized by more than 1 second")
         else:
-            print("Service is down.")
-            return False
+            print("Service is not responding")
     except requests.exceptions.RequestException as e:
-        print("Service is not reachable.")
-        return False
+        print("Error occurred while checking service health:", e)
 
-
-public_ip = open("./terraform/public_ip.txt", "r").read().strip()
-url = f"http://{public_ip}/now"
-result = healthcheck(url)
-print("Healthcheck result:", result)
+while True:
+    check_service_health()
+    time.sleep(60)  # Check every 60 seconds, Todo: replace with a cron job
