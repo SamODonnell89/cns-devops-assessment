@@ -1,3 +1,3 @@
-output "public_ip" {
-  value = aws_instance.web_server.public_ip
+output "eks_cluster_endpoint" {
+  value = aws_eks_cluster.eks_cluster.endpoint
 }
